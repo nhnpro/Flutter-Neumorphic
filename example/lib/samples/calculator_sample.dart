@@ -95,7 +95,7 @@ class _TopScreenWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Neumorphic(
       boxShape: NeumorphicBoxShape.roundRect(borderRadius: BorderRadius.circular(12)),
-      style: NeumorphicStyle(depth: -1 * NeumorphicTheme.of(context).current.depth),
+      style: NeumorphicStyle(depth: -1 * NeumorphicTheme.of(context).currentTheme.depth),
       child: FractionallySizedBox(
         widthFactor: 1,
         child: Padding(
@@ -194,11 +194,11 @@ class __PageContentState extends State<_PageContent> {
               RaisedButton(
                 onPressed: (){
                   setState(() {
-                    NeumorphicTheme.of(context).updateCurrentTheme(NeumorphicThemeData(
+                    NeumorphicTheme.of(context).currentTheme = NeumorphicThemeData(
                       depth: 1,
                       intensity: 0.5,
                       accentColor: Colors.cyan,
-                    ));
+                    );
                   });
                 },
                 child: Text("style 1",),
@@ -206,11 +206,11 @@ class __PageContentState extends State<_PageContent> {
               RaisedButton(
                 onPressed: (){
                   setState(() {
-                    NeumorphicTheme.of(context).updateCurrentTheme(NeumorphicThemeData(
+                    NeumorphicTheme.of(context).currentTheme = NeumorphicThemeData(
                       depth: 8,
                       intensity: 0.3,
                       accentColor: Colors.greenAccent,
-                    ));
+                    );
                   });
                 },
                 child: Text("style 2",),

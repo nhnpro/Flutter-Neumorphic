@@ -1,13 +1,16 @@
 /* nullable */
+import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 
 import 'theme.dart';
+
 export 'theme.dart';
 
-/// An enum that indicates to the NeumorphicTheme which theme to use
+/// An enum that indicates to the [NeumorphicTheme] which theme to use
 /// LIGHT : the light theme (default theme)
 /// DARK : the dark theme
 /// SYSTEM : will depend on the user's system theme
@@ -15,32 +18,31 @@ export 'theme.dart';
 /// @see Brightness
 /// @see window.platformBrightness
 ///
-enum CurrentTheme { LIGHT, DARK, SYSTEM }
+enum UsedTheme { LIGHT, DARK, SYSTEM }
 
 /// A immutable contained by the NeumorhicTheme
 /// That will save the current definition of the theme
 /// It will be accessible to the childs widgets by an InheritedWidget
-class ThemeHost {
-
+class ThemesWrapper {
   final NeumorphicThemeData theme;
   final NeumorphicThemeData darkTheme;
-  final CurrentTheme currentTheme;
+  final UsedTheme usedTheme;
 
-  const ThemeHost({
+  const ThemesWrapper({
     @required this.theme,
     this.darkTheme,
-    this.currentTheme = CurrentTheme.SYSTEM,
+    this.usedTheme = UsedTheme.SYSTEM,
   });
 
   bool get useDark =>
       darkTheme != null &&
       (
           //forced to use DARK by user
-          currentTheme == CurrentTheme.DARK ||
+          usedTheme == UsedTheme.DARK ||
               //The setting indicating the current brightness mode of the host platform. If the platform has no preference, platformBrightness defaults to Brightness.light.
               window.platformBrightness == Brightness.dark);
 
-  NeumorphicThemeData getCurrentTheme() {
+  NeumorphicThemeData get currentTheme {
     if (useDark) {
       return darkTheme;
     } else {
@@ -50,28 +52,58 @@ class ThemeHost {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is ThemeHost &&
-          runtimeType == other.runtimeType &&
-          theme == other.theme &&
-          darkTheme == other.darkTheme &&
-          currentTheme == other.currentTheme;
+      identical(this, other) || other is ThemesWrapper && runtimeType == other.runtimeType && theme == other.theme && darkTheme == other.darkTheme && usedTheme == other.usedTheme;
 
   @override
-  int get hashCode =>
-      theme.hashCode ^ darkTheme.hashCode ^ currentTheme.hashCode;
+  int get hashCode => theme.hashCode ^ darkTheme.hashCode ^ usedTheme.hashCode;
 
-  ThemeHost copyWith({
+  ThemesWrapper copyWith({
     NeumorphicThemeData theme,
     NeumorphicThemeData darkTheme,
-    CurrentTheme currentTheme,
+    UsedTheme usedTheme,
   }) {
-    return new ThemeHost(
+    return new ThemesWrapper(
       theme: theme ?? this.theme,
       darkTheme: darkTheme ?? this.darkTheme,
-      currentTheme: currentTheme ?? this.currentTheme,
+      usedTheme: usedTheme ?? this.usedTheme,
     );
   }
+}
+
+class ThemeBloc {
+  ThemesWrapper _themeWrapper;
+  StreamController<ThemesWrapper> _controller = StreamController.broadcast();
+
+  Stream<ThemesWrapper> get stream => _controller.stream;
+
+  ThemeBloc(this._themeWrapper) : assert(_themeWrapper != null);
+
+  bool get isUsingDark => _themeWrapper.useDark;
+
+  void update(ThemesWrapper newValue) {
+    _themeWrapper = newValue;
+    _controller.sink.add(newValue);
+  }
+
+  void dispose() {
+    _controller.close();
+  }
+
+  ThemesWrapper get themeWrapper => _themeWrapper;
+
+  NeumorphicThemeData get currentTheme => _themeWrapper.currentTheme;
+
+  set currentTheme(NeumorphicThemeData updateThemeData) {
+    if (_themeWrapper.useDark) {
+      update(_themeWrapper.copyWith(darkTheme: updateThemeData));
+    } else {
+      update(_themeWrapper.copyWith(theme: updateThemeData));
+    }
+  }
+
+  UsedTheme get usedTheme => _themeWrapper.usedTheme;
+
+  set usedTheme(UsedTheme value) => update(_themeWrapper.copyWith(usedTheme: usedTheme));
 }
 
 /// The NeumorphicTheme (provider)
@@ -111,30 +143,30 @@ class NeumorphicTheme extends StatefulWidget {
   final NeumorphicThemeData theme;
   final NeumorphicThemeData darkTheme;
   final Widget child;
-  final CurrentTheme currentTheme;
+  final UsedTheme usedTheme;
 
   NeumorphicTheme({
     Key key,
     @required this.child,
     this.theme = neumorphicDefaultTheme,
     this.darkTheme = neumorphicDefaultDarkTheme,
-    this.currentTheme,
+    this.usedTheme,
   });
 
-  @override
-  _NeumorphicThemeState createState() => _NeumorphicThemeState();
-
-  static NeumorphicThemeInherited of(BuildContext context) {
+  static ThemeBloc of(BuildContext context) {
     try {
-      return context
-          .dependOnInheritedWidgetOfExactType<NeumorphicThemeInherited>();
+      return Provider.of<ThemeBloc>(context);
     } catch (t) {
-      return null;
+      return null; //if no one found
     }
   }
 
   static bool isUsingDark(BuildContext context) {
-    return of(context).isUsingDark;
+    try {
+      return of(context).themeWrapper.useDark;
+    } catch (t) {
+      return false;
+    }
   }
 
   static Color accentColor(BuildContext context) {
@@ -151,90 +183,58 @@ class NeumorphicTheme extends StatefulWidget {
 
   static NeumorphicThemeData getCurrentTheme(BuildContext context) {
     try {
-      final provider = NeumorphicTheme.of(context);
-      return provider.current;
+      return NeumorphicTheme.of(context).currentTheme;
     } catch (t) {
-      return null;
+      return neumorphicDefaultTheme;
     }
   }
+
+  static Stream<NeumorphicThemeData> listenCurrentTheme(BuildContext context) {
+    try {
+      return NeumorphicTheme.of(context).stream.map((value) => value.currentTheme);
+    } catch (t) {
+      return Stream.value(neumorphicDefaultTheme);
+    }
+  }
+
+  @override
+  createState() => _NeumorphicThemeState();
 }
 
 class _NeumorphicThemeState extends State<NeumorphicTheme> {
-  ThemeHost _themeHost;
+  ThemeBloc _themeBloc;
 
   @override
   void initState() {
     super.initState();
-    _themeHost = ThemeHost(
+    _themeBloc = ThemeBloc(ThemesWrapper(
       theme: widget.theme,
-      currentTheme: widget.currentTheme,
+      usedTheme: widget.usedTheme,
       darkTheme: widget.darkTheme,
-    );
+    ));
+  }
+
+  @override
+  void dispose() {
+    _themeBloc.dispose();
+    super.dispose();
   }
 
   @override
   void didUpdateWidget(NeumorphicTheme oldWidget) {
     super.didUpdateWidget(oldWidget);
-    setState(() {
-      _themeHost = ThemeHost(
-        theme: widget.theme,
-        currentTheme: widget.currentTheme,
-        darkTheme: widget.darkTheme,
-      );
-    });
+    _themeBloc.update(ThemesWrapper(
+      theme: widget.theme,
+      usedTheme: widget.usedTheme,
+      darkTheme: widget.darkTheme,
+    ));
   }
 
   @override
   Widget build(BuildContext context) {
-    return NeumorphicThemeInherited(
-      value: _themeHost,
-      onChanged: (value) {
-        setState(() {
-          _themeHost = value;
-        });
-      },
+    return Provider.value(
+      value: _themeBloc,
       child: widget.child,
     );
-  }
-}
-
-class NeumorphicThemeInherited extends InheritedWidget {
-  final Widget child;
-  final ThemeHost value;
-  final ValueChanged<ThemeHost> onChanged;
-
-  NeumorphicThemeInherited(
-      {Key key,
-      @required this.child,
-      @required this.value,
-      @required this.onChanged});
-
-  @override
-  bool updateShouldNotify(NeumorphicThemeInherited old) => value != old.value;
-
-  NeumorphicThemeData get current {
-    return this.value.getCurrentTheme();
-  }
-
-  bool get isUsingDark {
-    return value.useDark;
-  }
-
-  CurrentTheme get currentTheme => value.currentTheme;
-
-  set currentTheme(CurrentTheme currentTheme) {
-    this.onChanged(value.copyWith(currentTheme: currentTheme));
-  }
-
-  void updateCurrentTheme(NeumorphicThemeData update) {
-    if (value.useDark) {
-      final newValue = value.copyWith(darkTheme: update);
-      //this.value = newValue;
-      this.onChanged(newValue);
-    } else {
-      final newValue = value.copyWith(theme: update);
-      //this.value = newValue;
-      this.onChanged(newValue);
-    }
   }
 }
