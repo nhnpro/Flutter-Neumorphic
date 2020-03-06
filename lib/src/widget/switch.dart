@@ -3,7 +3,6 @@ import 'package:flutter/widgets.dart';
 import '../NeumorphicBoxShape.dart';
 import '../theme_provider.dart';
 
-
 /// A style to customize the [NeumorphicSwitch]
 ///
 /// you can define the track : [activeTrackColor], [inactiveTrackColor], [trackDepth]
@@ -94,8 +93,7 @@ class NeumorphicSwitch extends StatefulWidget {
   _NeumorphicSwitchState createState() => _NeumorphicSwitchState();
 }
 
-class _NeumorphicSwitchState extends State<NeumorphicSwitch>
-    with SingleTickerProviderStateMixin {
+class _NeumorphicSwitchState extends State<NeumorphicSwitch> with SingleTickerProviderStateMixin {
   Animation<Alignment> animation;
   AnimationController controller;
 
@@ -103,48 +101,48 @@ class _NeumorphicSwitchState extends State<NeumorphicSwitch>
   void initState() {
     super.initState();
     controller = AnimationController(duration: widget.duration, vsync: this);
-    animation = Tween<Alignment>(
-            begin: Alignment.centerLeft, end: Alignment.centerRight)
-        .animate(controller);
+    animation = Tween<Alignment>(begin: Alignment.centerLeft, end: Alignment.centerRight).animate(controller);
   }
 
   @override
   Widget build(BuildContext context) {
-    final NeumorphicThemeData theme = NeumorphicTheme.getCurrentTheme(context);
-    return SizedBox(
-      height: widget.height,
-      child: AspectRatio(
-        aspectRatio: 2 / 1,
-        child: GestureDetector(
-          onTap: () {
-            // animation breaking prevention
-            if (controller.isAnimating) {
-              return;
-            }
-            if (widget.value == false) {
-              controller.forward();
-              _notifyOnChange(true);
-            } else {
-              controller.reverse();
-              _notifyOnChange(false);
-            }
-          },
-          child: Neumorphic(
-            boxShape: NeumorphicBoxShape.stadium(),
-            style: NeumorphicStyle(
-                depth: _getTrackDepth(theme.depth),
-                shape: NeumorphicShape.flat,
-                color: _getTrackColor(theme)),
-            child: AnimatedThumb(
-              depth: widget.style.thumbDepth,
-              animation: animation,
-              shape: _getThumbShape(),
-              thumbColor: _getThumbColor(theme),
+    return StreamBuilder<NeumorphicThemeData>(
+        initialData: NeumorphicTheme.getCurrentTheme(context),
+        stream: NeumorphicTheme.listenCurrentTheme(context),
+        builder: (context, snap) {
+          final NeumorphicThemeData theme = snap.data;
+          return SizedBox(
+            height: widget.height,
+            child: AspectRatio(
+              aspectRatio: 2 / 1,
+              child: GestureDetector(
+                onTap: () {
+                  // animation breaking prevention
+                  if (controller.isAnimating) {
+                    return;
+                  }
+                  if (widget.value == false) {
+                    controller.forward();
+                    _notifyOnChange(true);
+                  } else {
+                    controller.reverse();
+                    _notifyOnChange(false);
+                  }
+                },
+                child: Neumorphic(
+                  boxShape: NeumorphicBoxShape.stadium(),
+                  style: NeumorphicStyle(depth: _getTrackDepth(theme.depth), shape: NeumorphicShape.flat, color: _getTrackColor(theme)),
+                  child: AnimatedThumb(
+                    depth: widget.style.thumbDepth,
+                    animation: animation,
+                    shape: _getThumbShape(),
+                    thumbColor: _getThumbColor(theme),
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
-    );
+          );
+        });
   }
 
   NeumorphicShape _getThumbShape() {
@@ -154,21 +152,16 @@ class _NeumorphicSwitchState extends State<NeumorphicSwitch>
   double _getTrackDepth(double themeDepth) {
     //force negative to have emboss
     double depth = -1 * (widget.style.trackDepth ?? themeDepth).abs();
-    depth =
-        depth.clamp(Neumorphic.MIN_DEPTH, NeumorphicSwitch.MIN_EMBOSS_DEPTH);
+    depth = depth.clamp(Neumorphic.MIN_DEPTH, NeumorphicSwitch.MIN_EMBOSS_DEPTH);
     return depth;
   }
 
   Color _getTrackColor(NeumorphicThemeData theme) {
-    return widget.value == true
-        ? widget.style.activeTrackColor ?? theme.accentColor
-        : widget.style.inactiveTrackColor ?? theme.baseColor;
+    return widget.value == true ? widget.style.activeTrackColor ?? theme.accentColor : widget.style.inactiveTrackColor ?? theme.baseColor;
   }
 
   Color _getThumbColor(NeumorphicThemeData theme) {
-    Color color = widget.value == true
-        ? widget.style.activeThumbColor
-        : widget.style.inactiveThumbColor;
+    Color color = widget.value == true ? widget.style.activeThumbColor : widget.style.inactiveThumbColor;
     return color ?? theme.baseColor;
   }
 
@@ -189,13 +182,8 @@ class AnimatedThumb extends AnimatedWidget {
   final Color thumbColor;
   final NeumorphicShape shape;
   final double depth;
-  AnimatedThumb(
-      {Key key,
-      Animation<Alignment> animation,
-      this.thumbColor,
-      this.shape,
-      this.depth})
-      : super(key: key, listenable: animation);
+
+  AnimatedThumb({Key key, Animation<Alignment> animation, this.thumbColor, this.shape, this.depth}) : super(key: key, listenable: animation);
 
   @override
   Widget build(BuildContext context) {

@@ -32,94 +32,96 @@ class Page extends StatefulWidget {
 class _PageState extends State<Page> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: NeumorphicTheme.getCurrentTheme(context).baseColor,
-      appBar: AppBar(
+    return NeumorphicBackground(
+      child: Scaffold(
         backgroundColor: Colors.transparent,
-        title: Text("List", style: Theme.of(context).textTheme.display1),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              Row(
-                children: <Widget>[
-                  Neumorphic(
-                    boxShape: NeumorphicBoxShape.circle(),
-                    //accent: Colors.blueAccent,
-                    style: NeumorphicStyle(
-                      depth: -5,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          title: Text("List", style: Theme.of(context).textTheme.display1),
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(12.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisAlignment: MainAxisAlignment.start,
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                Row(
+                  children: <Widget>[
+                    Neumorphic(
+                      boxShape: NeumorphicBoxShape.circle(),
+                      //accent: Colors.blueAccent,
+                      style: NeumorphicStyle(
+                        depth: -5,
+                      ),
+                      child: SizedBox(
+                        height: 150,
+                        width: 150,
+                      ),
                     ),
-                    child: SizedBox(
-                      height: 150,
-                      width: 150,
+                    SizedBox(width: 30),
+                    Text("Emboss")
+                  ],
+                ),
+                SizedBox(height: 30),
+                Row(
+                  children: <Widget>[
+                    NeumorphicButton(
+                      minDistance: -2,
+                      boxShape: NeumorphicBoxShape.circle(),
+                      //accent: Colors.blueAccent,
+                      style: NeumorphicStyle(
+                        shape: NeumorphicShape.flat,
+                      ),
+                      child: SizedBox(
+                        height: 150,
+                        width: 150,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 30),
-                  Text("Emboss")
-                ],
-              ),
-              SizedBox(height: 30),
-              Row(
-                children: <Widget>[
-                  NeumorphicButton(
-                    minDistance: -2,
-                    boxShape: NeumorphicBoxShape.circle(),
-                    //accent: Colors.blueAccent,
-                    style: NeumorphicStyle(
-                      shape: NeumorphicShape.flat,
+                    SizedBox(width: 30),
+                    Text("Flat")
+                  ],
+                ),
+                SizedBox(height: 30),
+                Row(
+                  children: <Widget>[
+                    NeumorphicButton(
+                      boxShape: NeumorphicBoxShape.circle(),
+                      //accent: Colors.blueAccent,
+                      style: NeumorphicStyle(
+                        shape: NeumorphicShape.convex,
+                      ),
+                      child: SizedBox(
+                        height: 150,
+                        width: 150,
+                      ),
                     ),
-                    child: SizedBox(
-                      height: 150,
-                      width: 150,
+                    SizedBox(width: 30),
+                    Text("Convex")
+                  ],
+                ),
+                SizedBox(height: 30),
+                Row(
+                  children: <Widget>[
+                    NeumorphicButton(
+                      boxShape: NeumorphicBoxShape.circle(),
+                      //accent: Colors.blueAccent,
+                      style: NeumorphicStyle(
+                        shape: NeumorphicShape.concave,
+                      ),
+                      child: SizedBox(
+                        height: 150,
+                        width: 150,
+                      ),
                     ),
-                  ),
-                  SizedBox(width: 30),
-                  Text("Flat")
-                ],
-              ),
-              SizedBox(height: 30),
-              Row(
-                children: <Widget>[
-                  NeumorphicButton(
-                    boxShape: NeumorphicBoxShape.circle(),
-                    //accent: Colors.blueAccent,
-                    style: NeumorphicStyle(
-                      shape: NeumorphicShape.convex,
-                    ),
-                    child: SizedBox(
-                      height: 150,
-                      width: 150,
-                    ),
-                  ),
-                  SizedBox(width: 30),
-                  Text("Convex")
-                ],
-              ),
-              SizedBox(height: 30),
-              Row(
-                children: <Widget>[
-                  NeumorphicButton(
-                    boxShape: NeumorphicBoxShape.circle(),
-                    //accent: Colors.blueAccent,
-                    style: NeumorphicStyle(
-                      shape: NeumorphicShape.concave,
-                    ),
-                    child: SizedBox(
-                      height: 150,
-                      width: 150,
-                    ),
-                  ),
-                  SizedBox(width: 30),
-                  Text("Concave")
-                ],
-              ),
-              SizedBox(height: 30),
-            ],
+                    SizedBox(width: 30),
+                    Text("Concave")
+                  ],
+                ),
+                SizedBox(height: 30),
+              ],
+            ),
           ),
         ),
       ),

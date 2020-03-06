@@ -27,12 +27,7 @@ class NeumorphicRadioStyle {
   final NeumorphicBoxShape boxShape;
   final NeumorphicShape shape;
 
-  const NeumorphicRadioStyle(
-      {this.selectedDepth,
-      this.unselectedDepth,
-      this.intensity,
-      this.boxShape,
-      this.shape});
+  const NeumorphicRadioStyle({this.selectedDepth, this.unselectedDepth, this.intensity, this.boxShape, this.shape});
 }
 
 /// A Neumorphic Radio
@@ -128,8 +123,7 @@ class NeumorphicRadio<T> extends StatefulWidget {
 }
 
 class _NeumorphicRadioState<T> extends State<NeumorphicRadio<T>> {
-  bool get isSelected =>
-      widget.value != null && widget.value == widget.groupValue;
+  bool get isSelected => widget.value != null && widget.value == widget.groupValue;
 
   void _onClick() {
     if (widget.value == widget.groupValue) {
@@ -142,27 +136,29 @@ class _NeumorphicRadioState<T> extends State<NeumorphicRadio<T>> {
 
   @override
   Widget build(BuildContext context) {
-    final NeumorphicThemeData theme = NeumorphicTheme.getCurrentTheme(context);
+    return StreamBuilder<NeumorphicThemeData>(
+        initialData: NeumorphicTheme.getCurrentTheme(context),
+        stream: NeumorphicTheme.listenCurrentTheme(context),
+        builder: (context, snap) {
+          final NeumorphicThemeData theme = snap.data;
 
-    final double selectedDepth =
-        -1 * (widget.style.selectedDepth ?? theme.depth).abs();
-    final double unselectedDepth =
-        (widget.style.unselectedDepth ?? theme.depth).abs();
+          final double selectedDepth = -1 * (widget.style.selectedDepth ?? theme.depth).abs();
+          final double unselectedDepth = (widget.style.unselectedDepth ?? theme.depth).abs();
 
-    return NeumorphicButton(
-      onClick: () {
-        _onClick();
-      },
-      pressed: isSelected,
-      minDistance: selectedDepth,
-      boxShape: widget.style.boxShape ??
-          NeumorphicBoxShape.roundRect(borderRadius: BorderRadius.circular(5)),
-      child: widget.child,
-      style: NeumorphicStyle(
-        intensity: widget.style.intensity,
-        depth: isSelected ? selectedDepth : unselectedDepth,
-        shape: widget.style.shape ?? NeumorphicShape.flat,
-      ),
-    );
+          return NeumorphicButton(
+            onClick: () {
+              _onClick();
+            },
+            pressed: isSelected,
+            minDistance: selectedDepth,
+            boxShape: widget.style.boxShape ?? NeumorphicBoxShape.roundRect(borderRadius: BorderRadius.circular(5)),
+            child: widget.child,
+            style: NeumorphicStyle(
+              intensity: widget.style.intensity,
+              depth: isSelected ? selectedDepth : unselectedDepth,
+              shape: widget.style.shape ?? NeumorphicShape.flat,
+            ),
+          );
+        });
   }
 }

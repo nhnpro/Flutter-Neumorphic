@@ -192,28 +192,28 @@ class __PageContentState extends State<_PageContent> {
           Row(
             children: <Widget>[
               RaisedButton(
-                onPressed: (){
-                  setState(() {
-                    NeumorphicTheme.of(context).currentTheme = NeumorphicThemeData(
-                      depth: 1,
-                      intensity: 0.5,
-                      accentColor: Colors.cyan,
-                    );
-                  });
+                onPressed: () {
+                  NeumorphicTheme.of(context).currentTheme = NeumorphicThemeData(
+                    depth: 1,
+                    intensity: 0.5,
+                    accentColor: Colors.cyan,
+                  );
                 },
-                child: Text("style 1",),
+                child: Text(
+                  "style 1",
+                ),
               ),
               RaisedButton(
-                onPressed: (){
-                  setState(() {
+                onPressed: () {
                     NeumorphicTheme.of(context).currentTheme = NeumorphicThemeData(
                       depth: 8,
                       intensity: 0.3,
                       accentColor: Colors.greenAccent,
                     );
-                  });
                 },
-                child: Text("style 2",),
+                child: Text(
+                  "style 2",
+                ),
               ),
             ],
           )

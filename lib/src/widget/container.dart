@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/widgets.dart';
@@ -204,6 +205,8 @@ class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator>
   Animation<Offset> _lightSourceAnim;
   Animation<Color> _baseColorAnim;
 
+  StreamSubscription _themeStreamSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -230,6 +233,7 @@ class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator>
   @override
   void dispose() {
     _controller.dispose();
+    _themeStreamSubscription?.cancel();
     super.dispose();
   }
 
@@ -240,17 +244,17 @@ class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator>
   }
 
   void _initStyle() {
-    _theme = NeumorphicTheme.getCurrentTheme(context) ?? neumorphicDefaultTheme;
+    _theme = NeumorphicTheme.getCurrentTheme(context);
+    _themeStreamSubscription = NeumorphicTheme.listenCurrentTheme(context).listen((theme){
+      setState(() {
+        _theme = theme;
+      });
+    });
     _animatedStyle =
         (widget.style ?? NeumorphicStyle()).copyWithThemeIfNull(_theme);
   }
 
   void updateStyle(NeumorphicStyle oldStyle, NeumorphicStyle newStyle) {
-    final newTheme =
-        NeumorphicTheme.getCurrentTheme(context) ?? neumorphicDefaultTheme;
-    if (newTheme != _theme) {
-      _theme = newTheme;
-    }
     final styleWithTheme =
         (newStyle ?? NeumorphicStyle()).copyWithThemeIfNull(_theme);
     if (_animatedStyle != styleWithTheme) {
@@ -284,10 +288,15 @@ class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator>
                   end: styleWithTheme.lightSource.offset)
               .animate(_controller);
         }
-        if (oldStyle.color != styleWithTheme.color) {
-          _baseColorAnim =
-              ColorTween(begin: oldStyle.color, end: styleWithTheme.color)
-                  .animate(_controller);
+        if(newStyle?.color == null){ //forcing using theme coloration, force the one from theme
+          _baseColorAnim = ColorTween(begin: styleWithTheme.color, end: styleWithTheme.color)
+              .animate(_controller);
+        } else { //a custom coloration defined in style
+          if (oldStyle.color != styleWithTheme.color) {
+            _baseColorAnim =
+                ColorTween(begin: oldStyle.color, end: styleWithTheme.color)
+                    .animate(_controller);
+          }
         }
 
         //endregion

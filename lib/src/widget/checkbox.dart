@@ -2,7 +2,6 @@ import 'package:flutter/material.dart' as material;
 import 'package:flutter/widgets.dart';
 
 import '../NeumorphicBoxShape.dart';
-
 import '../theme.dart';
 import '../theme_provider.dart';
 import 'button.dart';
@@ -100,36 +99,39 @@ class _NeumorphicCheckboxState extends State<NeumorphicCheckbox> {
 
   @override
   Widget build(BuildContext context) {
-    final NeumorphicThemeData theme = NeumorphicTheme.getCurrentTheme(context);
-    final selectedColor = widget.style.selectedColor ?? theme.accentColor;
+    return StreamBuilder<NeumorphicThemeData>(
+        initialData: NeumorphicTheme.getCurrentTheme(context),
+        stream: NeumorphicTheme.listenCurrentTheme(context),
+        builder: (context, snap) {
+          final NeumorphicThemeData theme = snap.data;
+          final selectedColor = widget.style.selectedColor ?? theme.accentColor;
 
-    final double selectedDepth =
-        -1 * (widget.style.selectedDepth ?? theme.depth).abs();
-    final double unselectedDepth =
-        (widget.style.unselectedDepth ?? theme.depth).abs();
+          final double selectedDepth = -1 * (widget.style.selectedDepth ?? theme.depth).abs();
+          final double unselectedDepth = (widget.style.unselectedDepth ?? theme.depth).abs();
 
-    return NeumorphicButton(
-      pressed: isSelected,
-      onClick: () {
-        _onClick();
-      },
-      minDistance: -1 * selectedDepth.abs(),
-      boxShape: NeumorphicBoxShape.roundRect(
-        borderRadius: BorderRadius.circular(5),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Icon(
-          material.Icons.check,
-          color: isSelected ? theme.baseColor : selectedColor,
-          size: 20.0,
-        ),
-      ),
-      style: NeumorphicStyle(
-        color: isSelected ? selectedColor : null,
-        depth: isSelected ? selectedDepth : unselectedDepth,
-        shape: NeumorphicShape.flat,
-      ),
-    );
+          return NeumorphicButton(
+            pressed: isSelected,
+            onClick: () {
+              _onClick();
+            },
+            minDistance: -1 * selectedDepth.abs(),
+            boxShape: NeumorphicBoxShape.roundRect(
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Icon(
+                material.Icons.check,
+                color: isSelected ? theme.baseColor : selectedColor,
+                size: 20.0,
+              ),
+            ),
+            style: NeumorphicStyle(
+              color: isSelected ? selectedColor : null,
+              depth: isSelected ? selectedDepth : unselectedDepth,
+              shape: NeumorphicShape.flat,
+            ),
+          );
+        });
   }
 }

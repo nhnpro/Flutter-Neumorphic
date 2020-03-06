@@ -4,7 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:provider/provider.dart';
+import 'package:rxdart/rxdart.dart';
 
 import 'theme.dart';
 
@@ -71,39 +71,39 @@ class ThemesWrapper {
 }
 
 class ThemeBloc {
-  ThemesWrapper _themeWrapper;
-  StreamController<ThemesWrapper> _controller = StreamController.broadcast();
+  BehaviorSubject<ThemesWrapper> _subject;
 
-  Stream<ThemesWrapper> get stream => _controller.stream;
+  Stream<ThemesWrapper> get stream => _subject.stream;
 
-  ThemeBloc(this._themeWrapper) : assert(_themeWrapper != null);
+  ThemeBloc(ThemesWrapper initialValue) : assert(initialValue != null) {
+    _subject = BehaviorSubject.seeded(initialValue, sync: true);
+  }
 
-  bool get isUsingDark => _themeWrapper.useDark;
+  bool get isUsingDark => _subject.value.useDark;
 
   void update(ThemesWrapper newValue) {
-    _themeWrapper = newValue;
-    _controller.sink.add(newValue);
+    _subject.add(newValue);
   }
 
   void dispose() {
-    _controller.close();
+    _subject.close();
   }
 
-  ThemesWrapper get themeWrapper => _themeWrapper;
+  ThemesWrapper get themeWrapper => _subject.value;
 
-  NeumorphicThemeData get currentTheme => _themeWrapper.currentTheme;
+  NeumorphicThemeData get currentTheme => themeWrapper.currentTheme;
 
   set currentTheme(NeumorphicThemeData updateThemeData) {
-    if (_themeWrapper.useDark) {
-      update(_themeWrapper.copyWith(darkTheme: updateThemeData));
+    if (themeWrapper.useDark) {
+      update(themeWrapper.copyWith(darkTheme: updateThemeData));
     } else {
-      update(_themeWrapper.copyWith(theme: updateThemeData));
+      update(themeWrapper.copyWith(theme: updateThemeData));
     }
   }
 
-  UsedTheme get usedTheme => _themeWrapper.usedTheme;
+  UsedTheme get usedTheme => themeWrapper.usedTheme;
 
-  set usedTheme(UsedTheme value) => update(_themeWrapper.copyWith(usedTheme: usedTheme));
+  set usedTheme(UsedTheme value) => update(themeWrapper.copyWith(usedTheme: value));
 }
 
 /// The NeumorphicTheme (provider)
@@ -155,7 +155,7 @@ class NeumorphicTheme extends StatefulWidget {
 
   static ThemeBloc of(BuildContext context) {
     try {
-      return Provider.of<ThemeBloc>(context);
+      return context.dependOnInheritedWidgetOfExactType<NeumorphicThemeInherited>().bloc;
     } catch (t) {
       return null; //if no one found
     }
@@ -232,9 +232,29 @@ class _NeumorphicThemeState extends State<NeumorphicTheme> {
 
   @override
   Widget build(BuildContext context) {
-    return Provider.value(
-      value: _themeBloc,
-      child: widget.child,
+    return NeumorphicThemeInherited(
+      bloc: this._themeBloc,
+      child: StreamBuilder( //to update childs when the theme (bloc) is updated
+        initialData: this._themeBloc,
+        stream: this._themeBloc.stream,
+        builder: (context, value) {
+          return widget.child;
+        },
+      ),
     );
   }
+}
+
+class NeumorphicThemeInherited extends InheritedWidget {
+  final Widget child;
+  final ThemeBloc bloc;
+
+  NeumorphicThemeInherited({
+    Key key,
+    @required this.child,
+    @required this.bloc,
+  });
+
+  @override
+  bool updateShouldNotify(NeumorphicThemeInherited old) => true;
 }

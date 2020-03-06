@@ -38,11 +38,17 @@ class NeumorphicBackground extends StatelessWidget {
       color: this.backendColor,
       child: ClipRRect(
         borderRadius: this.borderRadius ?? BorderRadius.circular(0),
-        child: AnimatedContainer(
-          color: NeumorphicTheme.getCurrentTheme(context).baseColor,
-          padding: this.padding,
-          duration: const Duration(milliseconds: 100),
-          child: this.child,
+        child: StreamBuilder<NeumorphicThemeData>(
+          initialData: NeumorphicTheme.getCurrentTheme(context),
+          stream: NeumorphicTheme.listenCurrentTheme(context),
+          builder: (context, snap){
+            return AnimatedContainer(
+              color:  snap.data.baseColor,
+              padding: this.padding,
+              duration: const Duration(milliseconds: 100),
+              child: this.child,
+            );
+          },
         ),
       ),
     );

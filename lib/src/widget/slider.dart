@@ -30,19 +30,10 @@ class SliderStyle {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ProgressStyle &&
-          runtimeType == other.runtimeType &&
-          depth == other.depth &&
-          borderRadius == other.borderRadius &&
-          accent == other.accent &&
-          variant == other.variant;
+      other is ProgressStyle && runtimeType == other.runtimeType && depth == other.depth && borderRadius == other.borderRadius && accent == other.accent && variant == other.variant;
 
   @override
-  int get hashCode =>
-      depth.hashCode ^
-      borderRadius.hashCode ^
-      accent.hashCode ^
-      variant.hashCode;
+  int get hashCode => depth.hashCode ^ borderRadius.hashCode ^ accent.hashCode ^ variant.hashCode;
 }
 
 /// A Neumorphic Design slider.
@@ -129,8 +120,7 @@ class _NeumorphicSliderState extends State<NeumorphicSlider> {
             // print("tapPos : $tapPos");
             // print("newPercent : $newPercent");
 
-            final newValue = ((widget.max - widget.min) * newPercent)
-                .clamp(widget.min, widget.max);
+            final newValue = ((widget.max - widget.min) * newPercent).clamp(widget.min, widget.max);
 
             if (widget.onChanged != null) {
               //  print("onChanged : $newValue");
@@ -159,8 +149,7 @@ class _NeumorphicSliderState extends State<NeumorphicSlider> {
             _generateSlider(),
             Align(
                 alignment: Alignment(
-                    (widget.percent * 2) -
-                        1, //because left = -1 & right = 1, so the "width" = 2, and minValue = 1
+                    (widget.percent * 2) - 1, //because left = -1 & right = 1, so the "width" = 2, and minValue = 1
                     0),
                 child: _generateThumb(context))
           ],
@@ -170,32 +159,42 @@ class _NeumorphicSliderState extends State<NeumorphicSlider> {
   }
 
   Widget _generateSlider() {
-    final theme = NeumorphicTheme.getCurrentTheme(context);
-    return NeumorphicProgress(
-      duration: Duration.zero,
-      percent: widget.percent,
-      height: widget.height,
-      style: ProgressStyle(
-        depth: widget.style.depth,
-        borderRadius: widget.style.borderRadius,
-        accent: widget.style.accent ?? theme.accentColor,
-        variant: widget.style.variant ?? theme.variantColor,
-      ),
-    );
+    return StreamBuilder<NeumorphicThemeData>(
+        initialData: NeumorphicTheme.getCurrentTheme(context),
+        stream: NeumorphicTheme.listenCurrentTheme(context),
+        builder: (context, snap) {
+          final NeumorphicThemeData theme = snap.data;
+          return NeumorphicProgress(
+            duration: Duration.zero,
+            percent: widget.percent,
+            height: widget.height,
+            style: ProgressStyle(
+              depth: widget.style.depth,
+              borderRadius: widget.style.borderRadius,
+              accent: widget.style.accent ?? theme.accentColor,
+              variant: widget.style.variant ?? theme.variantColor,
+            ),
+          );
+        });
   }
 
   Widget _generateThumb(BuildContext context) {
-    final theme = NeumorphicTheme.getCurrentTheme(context);
-    return Neumorphic(
-      style: NeumorphicStyle(
-        shape: NeumorphicShape.concave,
-        color: widget.style.accent ?? theme.accentColor,
-      ),
-      boxShape: NeumorphicBoxShape.circle(),
-      child: SizedBox(
-        height: widget.height * 1.5,
-        width: widget.height * 1.5,
-      ),
-    );
+    return StreamBuilder<NeumorphicThemeData>(
+        initialData: NeumorphicTheme.getCurrentTheme(context),
+        stream: NeumorphicTheme.listenCurrentTheme(context),
+        builder: (context, snap) {
+          final NeumorphicThemeData theme = snap.data;
+          return Neumorphic(
+            style: NeumorphicStyle(
+              shape: NeumorphicShape.concave,
+              color: widget.style.accent ?? theme.accentColor,
+            ),
+            boxShape: NeumorphicBoxShape.circle(),
+            child: SizedBox(
+              height: widget.height * 1.5,
+              width: widget.height * 1.5,
+            ),
+          );
+        });
   }
 }
