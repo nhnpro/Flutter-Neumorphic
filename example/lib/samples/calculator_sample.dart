@@ -64,29 +64,34 @@ class WidgetCalcButton extends StatelessWidget {
     }
   }
 
-  Color _backgroundColor(BuildContext context) {
-    return button.backgroundAccent ? NeumorphicTheme.accentColor(context) : null;
+  Color _backgroundColor(NeumorphicThemeData theme) {
+    return button.backgroundAccent ? theme.accentColor : null;
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(top: 14),
-      child: NeumorphicButton(
-        onClick: () {},
-        boxShape: NeumorphicBoxShape.circle(),
-        style: NeumorphicStyle(
-          shape: NeumorphicShape.concave,
-          color: _backgroundColor(context),
-        ),
-        child: Center(
-          child: Text(
-            button.label,
-            style: TextStyle(fontSize: 24, color: _textColor(context)),
-          ),
-        ),
-      ),
-    );
+        padding: EdgeInsets.only(top: 14),
+        child: StreamBuilder(
+            initialData: NeumorphicTheme.getCurrentTheme(context),
+            stream: NeumorphicTheme.listenCurrentTheme(context),
+            builder: (context, snap) {
+              NeumorphicThemeData theme = snap.data;
+              return NeumorphicButton(
+                onClick: () {},
+                boxShape: NeumorphicBoxShape.circle(),
+                style: NeumorphicStyle(
+                  shape: NeumorphicShape.concave,
+                  color: _backgroundColor(theme),
+                ),
+                child: Center(
+                  child: Text(
+                    button.label,
+                    style: TextStyle(fontSize: 24, color: _textColor(context)),
+                  ),
+                ),
+              );
+            }));
   }
 }
 
@@ -205,11 +210,11 @@ class __PageContentState extends State<_PageContent> {
               ),
               RaisedButton(
                 onPressed: () {
-                    NeumorphicTheme.of(context).currentTheme = NeumorphicThemeData(
-                      depth: 8,
-                      intensity: 0.3,
-                      accentColor: Colors.greenAccent,
-                    );
+                  NeumorphicTheme.of(context).currentTheme = NeumorphicThemeData(
+                    depth: 8,
+                    intensity: 0.3,
+                    accentColor: Colors.greenAccent,
+                  );
                 },
                 child: Text(
                   "style 2",

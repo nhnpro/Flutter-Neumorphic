@@ -3,15 +3,15 @@ import 'dart:math';
 
 import 'package:flutter/widgets.dart';
 
-import '../decoration/neumorphic_box_decorations.dart';
-import '../theme_provider.dart';
 import '../NeumorphicBoxShape.dart';
+import '../decoration/neumorphic_box_decorations.dart';
 import '../theme.dart';
+import '../theme_provider.dart';
 
-export '../decoration/neumorphic_box_decorations.dart';
-export '../theme_provider.dart';
 export '../NeumorphicBoxShape.dart';
+export '../decoration/neumorphic_box_decorations.dart';
 export '../theme.dart';
+export '../theme_provider.dart';
 
 ///
 /// Work in progress
@@ -34,19 +34,10 @@ class NeumorphicBorder {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is NeumorphicBorder &&
-          runtimeType == other.runtimeType &&
-          color == other.color &&
-          width == other.width &&
-          depth == other.depth &&
-          oppositeLightSource == other.oppositeLightSource;
+      other is NeumorphicBorder && runtimeType == other.runtimeType && color == other.color && width == other.width && depth == other.depth && oppositeLightSource == other.oppositeLightSource;
 
   @override
-  int get hashCode =>
-      color.hashCode ^
-      width.hashCode ^
-      depth.hashCode ^
-      oppositeLightSource.hashCode;
+  int get hashCode => color.hashCode ^ width.hashCode ^ depth.hashCode ^ oppositeLightSource.hashCode;
 }
 
 /// The main container of the Neumorphic UI KIT
@@ -74,6 +65,7 @@ class Neumorphic extends StatelessWidget {
   static const double MAX_CURVE = 1.0;
 
   final Widget child;
+
   //final Color accent;
   final NeumorphicStyle style;
   final EdgeInsets padding;
@@ -120,9 +112,7 @@ class Neumorphic extends StatelessWidget {
                 boxShape: this.boxShape,
                 style: style.copyWith(
                   depth: border.depth ?? style.depth,
-                  lightSource: border.oppositeLightSource
-                      ? style.lightSource.invert()
-                      : style.lightSource,
+                  lightSource: border.oppositeLightSource ? style.lightSource.invert() : style.lightSource,
                 ),
                 child: this.child,
               ),
@@ -138,23 +128,23 @@ class Neumorphic extends StatelessWidget {
           }
 
           //print("${style.depth}");
-          final decorator = NeumorphicBoxDecoration(
-              /*accent: accent,*/ style: style,
-              shape: shape);
 
           Widget clippedChild;
           if (shape.isCircle) {
             clippedChild = ClipPath(clipper: CircleClipper(), child: widgetChild);
           } else {
-            clippedChild =
-                ClipRRect(borderRadius: shape.borderRadius, child: widgetChild);
+            clippedChild = ClipRRect(borderRadius: shape.borderRadius, child: widgetChild);
           }
 
           return AnimatedContainer(
             key: shape.isCircle ? _circleKey : _rectangleKey,
             duration: this.duration,
             child: clippedChild,
-            decoration: decorator,
+            decoration: NeumorphicBoxDecoration(
+              /*accent: accent,*/
+                style: style,
+                shape: shape
+            )
           );
         });
   }
@@ -174,8 +164,7 @@ class CircleClipper extends CustomClipper<Path> {
   bool shouldReclip(CircleClipper oldClipper) => true;
 }
 
-typedef Widget _NeumorphicStyleBuilder(
-    BuildContext context, NeumorphicStyle style);
+typedef Widget _NeumorphicStyleBuilder(BuildContext context, NeumorphicStyle style);
 
 class _NeumorphicStyleAnimator extends StatefulWidget {
   //final Widget child;
@@ -183,17 +172,14 @@ class _NeumorphicStyleAnimator extends StatefulWidget {
   final Duration duration;
   final _NeumorphicStyleBuilder builder;
 
-  _NeumorphicStyleAnimator(
-      {@required this.duration, @required this.builder, this.style});
+  _NeumorphicStyleAnimator({@required this.duration, @required this.builder, this.style});
 
   @override
-  _NeumorphicStyleAnimatorState createState() =>
-      _NeumorphicStyleAnimatorState();
+  _NeumorphicStyleAnimatorState createState() => _NeumorphicStyleAnimatorState();
 }
 
-class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator>
-    with TickerProviderStateMixin {
-  NeumorphicThemeData _theme;
+class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator> with TickerProviderStateMixin {
+  NeumorphicThemeData _currentTheme;
   NeumorphicStyle _animatedStyle;
 
   AnimationController _controller;
@@ -201,7 +187,6 @@ class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator>
   //animated style
   Animation<double> _depthAnim;
   Animation<double> _intensityAnim;
-  //Animation<double> _curveFactoryAnim;
   Animation<Offset> _lightSourceAnim;
   Animation<Color> _baseColorAnim;
 
@@ -217,13 +202,8 @@ class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator>
             depth: _depthAnim?.value ?? _animatedStyle.depth,
             intensity: _intensityAnim?.value ?? _animatedStyle.intensity,
             //curveFactor: _curveFactoryAnim?.value ?? _animatedStyle.curveFactor,
-            lightSource: _lightSourceAnim?.value != null
-                ? LightSource(
-                    _lightSourceAnim.value.dx, _lightSourceAnim.value.dy)
-                : _animatedStyle.lightSource,
-            color: _baseColorAnim?.value != null
-                ? _baseColorAnim.value
-                : _animatedStyle.color,
+            lightSource: _lightSourceAnim?.value != null ? LightSource(_lightSourceAnim.value.dx, _lightSourceAnim.value.dy) : _animatedStyle.lightSource,
+            color: _baseColorAnim?.value ?? _animatedStyle.color,
           );
           //print("animatedStyle: ${_animatedStyle}");
         });
@@ -240,26 +220,28 @@ class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator>
   @override
   void didUpdateWidget(_NeumorphicStyleAnimator oldWidget) {
     super.didUpdateWidget(oldWidget);
-    updateStyle(_animatedStyle, widget.style);
+    updateStyleTo(widget.style);
   }
 
   void _initStyle() {
-    _theme = NeumorphicTheme.getCurrentTheme(context);
-    _themeStreamSubscription = NeumorphicTheme.listenCurrentTheme(context).listen((theme){
-      setState(() {
-        _theme = theme;
-      });
+    _onThemeChanged(NeumorphicTheme.getCurrentTheme(context));
+    _themeStreamSubscription = NeumorphicTheme.listenCurrentTheme(context).listen((theme) {
+      _onThemeChanged(theme);
     });
-    _animatedStyle =
-        (widget.style ?? NeumorphicStyle()).copyWithThemeIfNull(_theme);
   }
 
-  void updateStyle(NeumorphicStyle oldStyle, NeumorphicStyle newStyle) {
-    final styleWithTheme =
-        (newStyle ?? NeumorphicStyle()).copyWithThemeIfNull(_theme);
+  void _onThemeChanged(NeumorphicThemeData newTheme) {
+    setState(() {
+      _currentTheme = newTheme;
+      updateStyleTo(widget.style);
+    });
+  }
+
+  void updateStyleTo(NeumorphicStyle newStyle) {
+    final styleWithTheme = (newStyle ?? NeumorphicStyle()).copyWithThemeIfNull(_currentTheme);
     if (_animatedStyle != styleWithTheme) {
-      if (widget.duration == Duration.zero) {
-        //don't need to animate
+      if (_animatedStyle == null || widget.duration == Duration.zero) {
+        //don't need to animate, just apply
 
         _animatedStyle = styleWithTheme;
       } else {
@@ -269,34 +251,18 @@ class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator>
         _animatedStyle = _animatedStyle.copyWith(shape: styleWithTheme.shape);
 
         //animated values
-        if (oldStyle.depth != styleWithTheme.depth) {
-          _depthAnim = Tween(begin: oldStyle.depth, end: styleWithTheme.depth)
-              .animate(_controller);
+        if (_animatedStyle.depth != styleWithTheme.depth) {
+          _depthAnim = Tween(begin: _animatedStyle.depth, end: styleWithTheme.depth).animate(_controller);
         }
-        if (oldStyle.intensity != styleWithTheme.intensity) {
-          _intensityAnim =
-              Tween(begin: oldStyle.intensity, end: styleWithTheme.intensity)
-                  .animate(_controller);
+        if (_animatedStyle.intensity != styleWithTheme.intensity) {
+          _intensityAnim = Tween(begin: _animatedStyle.intensity, end: styleWithTheme.intensity).animate(_controller);
         }
-        // if (oldStyle.curveFactor != styleWithTheme.curveFactor) {
-        //   _curveFactoryAnim = Tween(begin: oldStyle.curveFactor, end: styleWithTheme.curveFactor).animate(_controller);
-        // }
-        if (oldStyle.lightSource != styleWithTheme.lightSource) {
+        if (_animatedStyle.lightSource != styleWithTheme.lightSource) {
           //print("old: ${oldStyle.lightSource.offset}, new: ${styleWithTheme.lightSource.offset}");
-          _lightSourceAnim = Tween(
-                  begin: oldStyle.lightSource.offset,
-                  end: styleWithTheme.lightSource.offset)
-              .animate(_controller);
+          _lightSourceAnim = Tween(begin: _animatedStyle.lightSource.offset, end: styleWithTheme.lightSource.offset).animate(_controller);
         }
-        if(newStyle?.color == null){ //forcing using theme coloration, force the one from theme
-          _baseColorAnim = ColorTween(begin: styleWithTheme.color, end: styleWithTheme.color)
-              .animate(_controller);
-        } else { //a custom coloration defined in style
-          if (oldStyle.color != styleWithTheme.color) {
-            _baseColorAnim =
-                ColorTween(begin: oldStyle.color, end: styleWithTheme.color)
-                    .animate(_controller);
-          }
+        if (_animatedStyle.color != styleWithTheme.color) {
+          _baseColorAnim = ColorTween(begin: _animatedStyle.color, end: styleWithTheme.color).animate(_controller);
         }
 
         //endregion
@@ -311,7 +277,7 @@ class _NeumorphicStyleAnimatorState extends State<_NeumorphicStyleAnimator>
 
   @override
   Widget build(BuildContext context) {
-    if (_theme == null) {
+    if (_animatedStyle == null) {
       _initStyle();
     }
     //print("animatedStyle: ${_animatedStyle}");
